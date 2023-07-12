@@ -12,7 +12,8 @@
   "jest": {
     "transform": {
       "^.+\\.[t|j]sx?$": "babel-jest"
-    }
+    },
+    "transformIgnorePatterns": ["/node_modules/(?!nanoid/)"]
   },
   "keywords": [],
   "author": "",
