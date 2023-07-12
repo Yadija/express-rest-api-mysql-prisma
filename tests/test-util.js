@@ -25,3 +25,7 @@ export const getTestUser = async () => prismaClient.user.findUnique({
     id: 'test',
   },
 });
+
+export const removeAllTestAuthentication = async () => {
+  await prismaClient.authentication.deleteMany({});
+};

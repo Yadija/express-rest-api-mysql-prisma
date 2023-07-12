@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { prismaClient } from '../application/database.js';
 
 // exceptions
+import AuthenticationError from '../exceptions/AuthenticationError.js';
 import InvariantError from '../exceptions/InvariantError.js';
 import NotFoundError from '../exceptions/NotFoundError.js';
 
@@ -44,17 +45,7 @@ class UsersService {
   }
 
   async getUserById(userId) {
-    const totalUserInDatabase = await this._pool.user.count({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (!totalUserInDatabase) {
-      throw new NotFoundError('cannot find user');
-    }
-
-    return this._pool.user.findFirst({
+    const user = await this._pool.user.findFirst({
       where: {
         id: userId,
       },
@@ -64,6 +55,38 @@ class UsersService {
         fullname: true,
       },
     });
+
+    if (!user) {
+      throw new NotFoundError('cannot find user');
+    }
+
+    return user;
+  }
+
+  async verifyUserCredential(username, password) {
+    const user = await this._pool.user.findUnique({
+      where: {
+        username,
+      },
+      select: {
+        id: true,
+        password: true,
+      },
+    });
+
+    if (!user) {
+      throw new AuthenticationError('username or password incorrect');
+    }
+
+    const { id, password: hashedPassword } = user;
+
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (!match) {
+      throw new AuthenticationError('username or password incorrect');
+    }
+
+    return id;
   }
 }
 
